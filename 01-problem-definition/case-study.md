@@ -12,11 +12,11 @@
 
 ## Situation
 
-Nexline Manufacturing has made substantial capital investments in advanced manufacturing equipment — CNC machines, robotic assembly arms, and precision tooling across two facilities. The hardware is capable. The oversight is not.
+Nexline Manufacturing has made substantial capital investments in advanced manufacturing equipment CNC machines, robotic assembly arms, and precision tooling across two facilities. The hardware is capable. The oversight is not.
 
-The company runs continuous 24/7 production to meet strict client delivery requirements in the aerospace and automotive sectors — industries where tolerances for error, delay, and defect are extremely low. Yet despite this operational pressure, Nexline's maintenance and monitoring practices have not evolved alongside its machinery.
+The company runs continuous 24/7 production to meet strict client delivery requirements in the aerospace and automotive sectors industries where tolerances for error, delay, and defect are extremely low. Yet despite this operational pressure, Nexline's maintenance and monitoring practices have not evolved alongside its machinery.
 
-Maintenance is still scheduled manually, based on fixed time intervals rather than actual equipment condition. There is no centralized system to observe what is happening across production lines in real time. Energy consumption is tracked at a facility level — not per machine or per line — making it impossible to identify waste or diagnose inefficiencies.
+Maintenance is still scheduled manually, based on fixed time intervals rather than actual equipment condition. There is no centralized system to observe what is happening across production lines in real time. Energy consumption is tracked at a facility level not per machine or per line making it impossible to identify waste or diagnose inefficiencies.
 
 The result is a growing gap between Nexline's physical capabilities and its operational intelligence.
 
@@ -25,13 +25,13 @@ The result is a growing gap between Nexline's physical capabilities and its oper
 ## Key Challenges
 
 ### 1. Fragmented Monitoring
-Each machine reports data independently through separate interfaces. There is no unified platform aggregating sensor readings across lines or plants. Operators must check multiple systems manually to get a partial picture of what is happening — and even then, the picture is incomplete and delayed.
+Each machine reports data independently through separate interfaces. There is no unified platform aggregating sensor readings across lines or plants. Operators must check multiple systems manually to get a partial picture of what is happening and even then, the picture is incomplete and delayed.
 
 ### 2. Unpredictable Downtime
-Without condition monitoring, equipment failures are discovered only after they occur. Maintenance teams respond reactively — dispatching technicians, sourcing parts, and halting production lines that could have been flagged for intervention days earlier. Each unplanned stoppage disrupts downstream scheduling, delays client shipments, and erodes trust.
+Without condition monitoring, equipment failures are discovered only after they occur. Maintenance teams respond reactively dispatching technicians, sourcing parts, and halting production lines that could have been flagged for intervention days earlier. Each unplanned stoppage disrupts downstream scheduling, delays client shipments, and erodes trust.
 
 ### 3. Wasted Energy
-Certain production lines consistently consume disproportionate amounts of energy compared to their output. The root causes — whether mechanical inefficiency, suboptimal settings, or degraded components — are unknown because no system currently correlates energy data with machine behavior or output rates.
+Certain production lines consistently consume disproportionate amounts of energy compared to their output. The root causes whether mechanical inefficiency, suboptimal settings, or degraded components are unknown because no system currently correlates energy data with machine behavior or output rates.
 
 ### 4. Lack of Real-Time Visibility
 Plant managers make decisions based on periodic reports and manual walkthroughs rather than live data. By the time an anomaly surfaces in a report, the window for early intervention has often passed. There is no mechanism for proactive alerting, no dashboard summarizing operational health, and no shared view of production status between management and maintenance teams.
@@ -51,14 +51,14 @@ The compounding effect of these four gaps has produced measurable business impac
 
 ## The Digital Twin Opportunity
 
-A Digital Twin — a real-time virtual model of the factory floor — represents the most direct solution to Nexline's intelligence gap. By combining IoT sensor simulation, machine learning-based predictive analytics, and an interactive operational dashboard, a Digital Twin platform would:
+A Digital Twin a real-time virtual model of the factory floor represents the most direct solution to Nexline's intelligence gap. By combining IoT sensor simulation, machine learning-based predictive analytics, and an interactive operational dashboard, a Digital Twin platform would:
 
 - Unify all machine and line data into a single monitoring environment
 - Shift maintenance from reactive to predictive, flagging failure risk before downtime occurs
 - Surface energy consumption patterns at the machine and line level, enabling targeted efficiency improvements
 - Provide plant managers and maintenance leads with live operational visibility and actionable alerts
 
-This project prototypes that system — from data architecture through predictive modeling to dashboard delivery — demonstrating how a Digital Twin implementation could transform Nexline's operational posture.
+This project prototypes that system from data architecture through predictive modeling to dashboard delivery demonstrating how a Digital Twin implementation could transform Nexline's operational posture.
 
 ---
 
