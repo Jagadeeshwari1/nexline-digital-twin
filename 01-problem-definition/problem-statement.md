@@ -29,7 +29,7 @@ Plant managers have no centralized view of what is happening on the factory floo
 
 ## The Opportunity
 
-A Digital Twin system — a real-time virtual model of the factory floor — can address all four problems simultaneously. By ingesting IoT sensor data, running predictive analytics, and surfacing insights through interactive dashboards, the system enables:
+A Digital Twin system a real-time virtual model of the factory floor can address all four problems simultaneously. By ingesting IoT sensor data, running predictive analytics, and surfacing insights through interactive dashboards, the system enables:
 
 - **Proactive maintenance** — predict failures before they cause downtime
 - **Unified monitoring** — one platform for all machines, lines, and plants
@@ -40,7 +40,7 @@ A Digital Twin system — a real-time virtual model of the factory floor — can
 
 ## Problem Statement Summary
 
-> Nexline Manufacturing lacks a centralized, intelligent monitoring system capable of predicting equipment failures, detecting energy inefficiencies, and providing real-time operational visibility — resulting in avoidable downtime, rising costs, and reduced client satisfaction.
+> Nexline Manufacturing lacks a centralized, intelligent monitoring system capable of predicting equipment failures, detecting energy inefficiencies, and providing real-time operational visibility resulting in avoidable downtime, rising costs, and reduced client satisfaction.
 
 This project addresses that gap by designing and implementing an end-to-end Digital Twin platform using IoT simulation, predictive machine learning models, and real-time dashboards.
 
