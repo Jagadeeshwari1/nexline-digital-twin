@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexline Digital Twin — Solution Prototype</title>
+<style>
+  :root{
+    --purple:#45146B; --purple-d:#360F54; --purple2:#6D28A8; --purple-soft:#8B5CC7;
+    --gold:#C8A028; --gold2:#E0C04B; --gold-soft:#F0E2A8;
+    --ink:#241C2E; --muted:#8A8298; --line:#EAE6F1; --bg:#F6F4FA; --card:#FFFFFF;
+    --normal:#3F8F6B; --normal-bg:#E9F5EF; --warn:#C8A028; --warn-bg:#FBF3DC;
+    --crit:#C2384A; --crit-bg:#FBEAEC;
+    --serif:"Cambria","Georgia",serif; --sans:"Calibri","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.5}
+  .topbar{background:linear-gradient(100deg,var(--purple-d),var(--purple) 60%,#5A1A88);
+    color:#fff;border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:20}
+  .topbar-in{max-width:1320px;margin:0 auto;padding:14px 26px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:11px}
+  .brand .dot{width:11px;height:11px;border-radius:50%;background:#46d39a;box-shadow:0 0 0 0 rgba(70,211,154,.6);
+    animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(70,211,154,.55)}70%{box-shadow:0 0 0 9px rgba(70,211,154,0)}100%{box-shadow:0 0 0 0 rgba(70,211,154,0)}}
+  .brand .name{font-family:var(--serif);font-size:19px;font-weight:700;letter-spacing:.3px}
+  .brand .name span{color:var(--gold2)}
+  .brand .tag{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#C9B6E4;margin-top:1px}
+  .roles{display:flex;gap:8px;margin-left:6px}
+  .role{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#E4D9F2;
+    padding:8px 15px;border-radius:9px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;
+    transition:.15s;display:flex;align-items:center;gap:8px}
+  .role:hover{background:rgba(255,255,255,.16)}
+  .role.active{background:var(--gold);border-color:var(--gold2);color:#3A2B00}
+  .role svg{width:15px;height:15px}
+  .live{margin-left:auto;text-align:right;font-size:12px;color:#C9B6E4}
+  .live .clk{font-family:var(--serif);font-size:15px;color:#fff;font-weight:600;letter-spacing:.5px}
+  .live .lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase}
+
+  .scope{background:#fff;border-bottom:1px solid var(--line)}
+  .scope-in{max-width:1320px;margin:0 auto;padding:12px 26px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .stat{display:flex;align-items:baseline;gap:7px;padding:4px 14px 4px 0;border-right:1px solid var(--line)}
+  .stat:last-child{border:none}
+  .stat .n{font-family:var(--serif);font-size:18px;font-weight:700;color:var(--purple)}
+  .stat .t{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .stat.alarm .n{color:var(--crit)}
+
+  .main{max-width:1320px;margin:0 auto;padding:24px 26px 70px}
+  .view{display:none}.view.on{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .vhead{display:flex;align-items:center;gap:12px;margin:6px 0 18px}
+  .vhead h2{font-family:var(--serif);font-size:21px;color:var(--purple);font-weight:700}
+  .vhead .vsub{font-size:13px;color:var(--muted)}
+  .vhead .pill{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+    background:var(--gold-soft);color:#7A5E0A;padding:5px 12px;border-radius:18px}
+
+  .kpirow{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+  .kc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;border-left:3px solid var(--gold)}
+  .kc .v{font-family:var(--serif);font-size:24px;font-weight:700;color:var(--purple)}
+  .kc .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:5px;font-weight:600}
+  .kc .s{font-size:11px;color:var(--muted);margin-top:2px}
+
+  .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(238px,1fr));gap:16px}
+  .mcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px;
+    position:relative;overflow:hidden;transition:.2s}
+  .mcard:hover{box-shadow:0 6px 20px rgba(69,20,107,.1);transform:translateY(-2px)}
+  .mcard .strip{position:absolute;top:0;left:0;right:0;height:4px}
+  .mcard.s-N .strip{background:var(--normal)}.mcard.s-W .strip{background:var(--warn)}.mcard.s-C .strip{background:var(--crit)}
+  .mtop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+  .mid{font-family:var(--serif);font-size:17px;font-weight:700;color:var(--ink)}
+  .mtype{font-size:11px;color:var(--muted)}
+  .sbadge{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:4px 9px;border-radius:6px}
+  .s-N .sbadge{background:var(--normal-bg);color:var(--normal)}
+  .s-W .sbadge{background:var(--warn-bg);color:#9A7B12}
+  .s-C .sbadge{background:var(--crit-bg);color:var(--crit)}
+  .gauge{display:flex;align-items:center;gap:14px;margin:8px 0 12px}
+  .gauge svg{width:74px;height:74px;flex-shrink:0}
+  .gauge .gtxt .gv{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--purple);line-height:1}
+  .gauge .gtxt .gl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+  .telem{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;font-size:12px;border-top:1px dashed var(--line);padding-top:11px}
+  .telem .row{display:flex;justify-content:space-between}
+  .telem .row .k{color:var(--muted)}
+  .telem .row .v{font-weight:600;font-variant-numeric:tabular-nums}
+  .telem .row .v.hot{color:var(--crit)}
+
+  .alertq{display:flex;flex-direction:column;gap:13px}
+  .alert{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:0;display:flex;overflow:hidden}
+  .alert .sev{width:7px;flex-shrink:0}
+  .alert.p-C .sev{background:var(--crit)}.alert.p-W .sev{background:var(--warn)}.alert.p-N .sev{background:var(--normal)}
+  .alert-body{padding:16px 18px;flex:1;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+  .alert-main{flex:1;min-width:230px}
+  .alert-main .am-top{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+  .alert-main .am-id{font-family:var(--serif);font-size:16px;font-weight:700}
+  .alert-main .am-type{font-size:12px;color:var(--muted)}
+  .alert-main .am-action{font-size:13.5px;margin-top:4px}
+  .alert-main .am-action b{color:var(--purple)}
+  .alert-meta{display:flex;gap:22px;align-items:center}
+  .am-stat{text-align:center}
+  .am-stat .v{font-family:var(--serif);font-size:18px;font-weight:700;color:var(--purple)}
+  .am-stat.risk .v{color:var(--crit)}
+  .am-stat .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .am-btns{display:flex;flex-direction:column;gap:7px}
+  .btn{font-family:var(--sans);font-size:12.5px;font-weight:600;padding:8px 16px;border-radius:8px;cursor:pointer;border:1px solid;white-space:nowrap;transition:.15s}
+  .btn.prim{background:var(--purple);color:#fff;border-color:var(--purple)}
+  .btn.prim:hover{background:var(--purple2)}
+  .btn.ghost{background:#fff;color:var(--purple);border-color:var(--line)}
+  .btn.ghost:hover{border-color:var(--purple-soft)}
+  .alert.ack{opacity:.5}
+  .alert.ack .am-btns{display:none}
+  .ackmark{font-size:12px;color:var(--normal);font-weight:700;display:none}
+  .alert.ack .ackmark{display:block}
+
+  .twocol{display:grid;grid-template-columns:1.4fr 1fr;gap:20px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .panel h3{font-family:var(--serif);font-size:16px;color:var(--purple);margin-bottom:14px}
+  .feed{display:flex;flex-direction:column;gap:10px;max-height:430px;overflow:auto}
+  .fitem{display:flex;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px}
+  .fitem .ficon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;font-size:13px}
+  .fitem.warn .ficon{background:var(--warn-bg);color:#9A7B12}
+  .fitem .fmain{flex:1}
+  .fitem .fmain b{color:var(--ink)}
+  .fitem .ftime{font-size:11px;color:var(--muted)}
+  .ebars{display:flex;flex-direction:column;gap:11px}
+  .ebar{display:grid;grid-template-columns:88px 1fr 54px;gap:10px;align-items:center;font-size:12.5px}
+  .ebar .track{height:18px;background:var(--bg);border-radius:5px;overflow:hidden}
+  .ebar .fill{height:100%;background:linear-gradient(90deg,var(--purple2),var(--gold));border-radius:5px}
+  .ebar .val{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+  .surplus{background:var(--crit-bg);border:1px solid #F2C9CE;border-radius:12px;padding:16px 18px;margin-top:16px;display:flex;gap:16px;align-items:center}
+  .surplus .big{font-family:var(--serif);font-size:30px;font-weight:700;color:var(--crit)}
+  .surplus .txt{font-size:13px;color:#7A2A33}
+
+  .maint-summary{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+  .ms{flex:1;min-width:150px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:center}
+  .ms .v{font-family:var(--serif);font-size:22px;font-weight:700}
+  .ms.due .v{color:var(--warn)}.ms.need .v{color:var(--crit)}.ms.ok .v{color:var(--normal)}
+  .ms .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:4px}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--purple);
+    color:#fff;padding:13px 22px;border-radius:10px;font-size:13.5px;box-shadow:0 8px 24px rgba(69,20,107,.3);
+    opacity:0;transition:.3s;z-index:40;border-left:3px solid var(--gold2)}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+  .note{font-size:11.5px;color:var(--muted);margin-top:8px;font-style:italic}
+  @media(max-width:900px){.kpirow{grid-template-columns:repeat(2,1fr)}.twocol{grid-template-columns:1fr}
+    .live{margin-left:0;width:100%;text-align:left}.roles{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-in">
+  <div class="brand">
+    <span class="dot"></span>
+    <div><div class="name">Nexline <span>Digital Twin</span></div><div class="tag">Smart Manufacturing Console · Prototype</div></div>
+  </div>
+  <div class="roles" id="roles">
+    <button class="role active" data-v="overview">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      Plant Manager</button>
+    <button class="role" data-v="maint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6.6 6.6 2 2 6.6-6.6a4 4 0 0 0 5.4-5.4l-2.3 2.3-2-2 2.3-2.3z"/></svg>
+      Maintenance Lead</button>
+    <button class="role" data-v="energy">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+      Energy Analyst</button>
+  </div>
+  <div class="live"><div class="clk" id="clk">--:--:--</div><div class="lbl" id="livelbl">Live · streaming</div></div>
+</div></div>
+
+<div class="scope"><div class="scope-in" id="scopebar"></div></div>
+
+<div class="main">
+  <!-- OVERVIEW -->
+  <section class="view on" id="v-overview">
+    <div class="vhead"><h2>Plant overview</h2><span class="vsub">Real-time status across all CNC assets · Plant 1 &amp; Plant 2</span>
+      <span class="pill">Decision view · operations</span></div>
+    <div class="kpirow" id="ovKpis"></div>
+    <div class="mgrid" id="ovCards"></div>
+    <p class="note">Cards stream live telemetry (jittered every 2s to simulate the IoT feed). Status is derived from each asset's risk score and vibration in real time — the same logic the predictive engine uses.</p>
+  </section>
+
+  <!-- MAINTENANCE -->
+  <section class="view" id="v-maint">
+    <div class="vhead"><h2>Predictive maintenance queue</h2><span class="vsub">Assets ranked by failure risk — act before downtime, not after</span>
+      <span class="pill">Decision view · maintenance</span></div>
+    <div class="maint-summary" id="maintSummary"></div>
+    <div class="alertq" id="alertQueue"></div>
+    <p class="note">Lead-time windows are derived from each asset's live risk score (higher risk → shorter window). "Acknowledge" simulates dispatching a work order — in production this would write to the CMMS.</p>
+  </section>
+
+  <!-- ENERGY -->
+  <section class="view" id="v-energy">
+    <div class="vhead"><h2>Energy &amp; sustainability monitor</h2><span class="vsub">Consumption, cost, emissions and anomaly detection</span>
+      <span class="pill">Decision view · energy</span></div>
+    <div class="kpirow" id="enKpis"></div>
+    <div class="twocol">
+      <div class="panel"><h3>Energy intensity by machine (kWh consumed, pilot total)</h3><div class="ebars" id="enBars"></div></div>
+      <div class="panel"><h3>Live anomaly feed</h3><div class="feed" id="enFeed"></div></div>
+    </div>
+    <div class="surplus"><div class="big" id="surplusBig">+42.8%</div>
+      <div class="txt"><b>Energy-per-unit surplus on anomaly readings.</b> Flagged events consume far more power for the same output —
+      the single largest controllable energy loss in the pilot. Detecting and correcting them in real time is the core of the energy use-case.</div></div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = {"meta": {"records": 2700, "cols": 33, "start": "2025-10-02", "end": "2025-11-01", "machines": ["CNC_01", "CNC_02", "CNC_03", "CNC_04", "CNC_05"], "machine_type": {"CNC_01": "CNC Lathe", "CNC_02": "CNC Milling", "CNC_03": "CNC Grinder", "CNC_04": "CNC Driller", "CNC_05": "CNC Turner"}, "plants": ["Plant 1", "Plant 2"], "lines": ["Line_A", "Line_B", "Line_C"], "shifts": ["A", "B", "C"], "corr": 0.626, "epu_norm": 0.1698, "epu_anom": 0.2424, "epu_surplus": 42.8, "Q": 0.98}, "before": {"downtime": {"CNC_01": 5682, "CNC_02": 5562, "CNC_03": 5738, "CNC_04": 5048, "CNC_05": 5199}, "avg_risk": {"CNC_01": 1.169, "CNC_02": 1.173, "CNC_03": 1.172, "CNC_04": 1.162, "CNC_05": 1.162}, "energy": {"CNC_01": 27867.0, "CNC_02": 27007.0, "CNC_03": 27628.0, "CNC_04": 26823.0, "CNC_05": 26647.0}, "cost": {"CNC_01": 3623.0, "CNC_02": 3511.0, "CNC_03": 3592.0, "CNC_04": 3487.0, "CNC_05": 3464.0}, "oee": {"CNC_01": 49.4, "CNC_02": 49.4, "CNC_03": 49.8, "CNC_04": 49.0, "CNC_05": 49.4}, "util": {"CNC_01": 82.3, "CNC_02": 82.6, "CNC_03": 83.1, "CNC_04": 82.2, "CNC_05": 82.4}, "eff": {"CNC_01": 6.12, "CNC_02": 6.1, "CNC_03": 6.11, "CNC_04": 6.09, "CNC_05": 6.11}, "anomalies": {"CNC_01": 14, "CNC_02": 10, "CNC_03": 9, "CNC_04": 12, "CNC_05": 10}, "status_counts": {"Normal": 1636, "Warning": 534, "Critical": 530}, "total_downtime": 27229, "total_energy": 135972, "total_cost": 17676, "total_co2": 8974, "total_units": 808624, "oee_overall": 49.4, "eff_overall": 6.11, "util_overall": 82.5, "energy_per_unit": 0.1682, "anomaly_total": 55}, "after": {"downtime": {"CNC_01": 3485, "CNC_02": 3425, "CNC_03": 3533, "CNC_04": 3103, "CNC_05": 3212}, "avg_risk": {"CNC_01": 1.169, "CNC_02": 1.173, "CNC_03": 1.172, "CNC_04": 1.162, "CNC_05": 1.162}, "energy": {"CNC_01": 24801.0, "CNC_02": 24073.0, "CNC_03": 24637.0, "CNC_04": 23887.0, "CNC_05": 23747.0}, "cost": {"CNC_01": 3224.0, "CNC_02": 3129.0, "CNC_03": 3203.0, "CNC_04": 3105.0, "CNC_05": 3087.0}, "oee": {"CNC_01": 54.6, "CNC_02": 54.5, "CNC_03": 54.9, "CNC_04": 54.2, "CNC_05": 54.5}, "util": {"CNC_01": 86.0, "CNC_02": 86.3, "CNC_03": 86.8, "CNC_04": 85.9, "CNC_05": 86.1}, "eff": {"CNC_01": 6.48, "CNC_02": 6.45, "CNC_03": 6.46, "CNC_04": 6.45, "CNC_05": 6.45}, "anomalies": {"CNC_01": 3, "CNC_02": 1, "CNC_03": 3, "CNC_04": 5, "CNC_05": 2}, "status_counts": {"Normal": 2119, "Warning": 515, "Critical": 66}, "total_downtime": 16758, "total_energy": 121145, "total_cost": 15748, "total_co2": 7995, "total_units": 808624, "oee_overall": 54.6, "eff_overall": 6.46, "util_overall": 86.2, "energy_per_unit": 0.1498, "anomaly_total": 14}, "scatter": [{"x": 0.83, "y": 1, "m": "CNC_03"}, {"x": 1.19, "y": 8, "m": "CNC_04"}, {"x": 1.07, "y": 8, "m": "CNC_04"}, {"x": 1.19, "y": 13, "m": "CNC_04"}, {"x": 1.1, "y": 4, "m": "CNC_02"}, {"x": 1.42, "y": 15, "m": "CNC_02"}, {"x": 1.09, "y": 12, "m": "CNC_04"}, {"x": 1.42, "y": 19, "m": "CNC_01"}, {"x": 1.03, "y": 11, "m": "CNC_03"}, {"x": 1.12, "y": 15, "m": "CNC_03"}, {"x": 1.33, "y": 16, "m": "CNC_03"}, {"x": 1.19, "y": 1, "m": "CNC_03"}, {"x": 1.31, "y": 7, "m": "CNC_03"}, {"x": 1.33, "y": 5, "m": "CNC_05"}, {"x": 1.19, "y": 7, "m": "CNC_01"}, {"x": 1.17, "y": 15, "m": "CNC_01"}, {"x": 1.01, "y": 10, "m": "CNC_02"}, {"x": 1.28, "y": 18, "m": "CNC_03"}, {"x": 1.31, "y": 11, "m": "CNC_01"}, {"x": 1.24, "y": 17, "m": "CNC_03"}, {"x": 1.16, "y": 14, "m": "CNC_05"}, {"x": 1.34, "y": 18, "m": "CNC_05"}, {"x": 0.97, "y": 10, "m": "CNC_01"}, {"x": 1.12, "y": 12, "m": "CNC_02"}, {"x": 0.95, "y": 5, "m": "CNC_01"}, {"x": 0.96, "y": 1, "m": "CNC_03"}, {"x": 1.18, "y": 20, "m": "CNC_04"}, {"x": 1.23, "y": 14, "m": "CNC_01"}, {"x": 1.01, "y": 10, "m": "CNC_01"}, {"x": 1.35, "y": 13, "m": "CNC_05"}, {"x": 1.11, "y": 18, "m": "CNC_01"}, {"x": 1.03, "y": 9, "m": "CNC_02"}, {"x": 1.2, "y": 6, "m": "CNC_05"}, {"x": 1.07, "y": 12, "m": "CNC_03"}, {"x": 1.11, "y": 4, "m": "CNC_05"}, {"x": 1.1, "y": 8, "m": "CNC_01"}, {"x": 1.24, "y": 11, "m": "CNC_02"}, {"x": 1.17, "y": 14, "m": "CNC_04"}, {"x": 1.19, "y": 4, "m": "CNC_03"}, {"x": 1.2, "y": 12, "m": "CNC_05"}, {"x": 1.23, "y": 1, "m": "CNC_04"}, {"x": 1.23, "y": 19, "m": "CNC_01"}, {"x": 1.14, "y": 9, "m": "CNC_04"}, {"x": 1.15, "y": 8, "m": "CNC_01"}, {"x": 1.26, "y": 16, "m": "CNC_02"}, {"x": 1.22, "y": 19, "m": "CNC_05"}, {"x": 0.91, "y": 5, "m": "CNC_03"}, {"x": 1.44, "y": 16, "m": "CNC_04"}, {"x": 0.98, "y": 8, "m": "CNC_05"}, {"x": 1.34, "y": 6, "m": "CNC_01"}, {"x": 1.26, "y": 7, "m": "CNC_05"}, {"x": 1.39, "y": 19, "m": "CNC_02"}, {"x": 0.89, "y": 3, "m": "CNC_04"}, {"x": 1.22, "y": 5, "m": "CNC_02"}, {"x": 1.18, "y": 12, "m": "CNC_03"}, {"x": 1.21, "y": 16, "m": "CNC_02"}, {"x": 1.56, "y": 20, "m": "CNC_01"}, {"x": 1.02, "y": 3, "m": "CNC_01"}, {"x": 0.89, "y": 8, "m": "CNC_03"}, {"x": 1.28, "y": 20, "m": "CNC_03"}, {"x": 1.13, "y": 5, "m": "CNC_05"}, {"x": 1.1, "y": 10, "m": "CNC_04"}, {"x": 1.51, "y": 20, "m": "CNC_02"}, {"x": 1.22, "y": 13, "m": "CNC_03"}, {"x": 1.04, "y": 10, "m": "CNC_05"}, {"x": 1.15, "y": 12, "m": "CNC_05"}, {"x": 1.19, "y": 2, "m": "CNC_03"}, {"x": 1.11, "y": 4, "m": "CNC_01"}, {"x": 0.96, "y": 7, "m": "CNC_04"}, {"x": 1.02, "y": 0, "m": "CNC_04"}, {"x": 0.77, "y": 0, "m": "CNC_05"}, {"x": 1.23, "y": 3, "m": "CNC_01"}, {"x": 0.78, "y": 1, "m": "CNC_02"}, {"x": 1.11, "y": 8, "m": "CNC_04"}, {"x": 1.12, "y": 8, "m": "CNC_01"}, {"x": 1.26, "y": 18, "m": "CNC_04"}, {"x": 1.37, "y": 17, "m": "CNC_05"}, {"x": 0.97, "y": 10, "m": "CNC_01"}, {"x": 0.97, "y": 3, "m": "CNC_02"}, {"x": 0.99, "y": 2, "m": "CNC_05"}, {"x": 1.18, "y": 11, "m": "CNC_05"}, {"x": 1.06, "y": 3, "m": "CNC_04"}, {"x": 1.26, "y": 0, "m": "CNC_04"}, {"x": 1.31, "y": 10, "m": "CNC_03"}, {"x": 1.08, "y": 0, "m": "CNC_01"}, {"x": 1.0, "y": 1, "m": "CNC_03"}, {"x": 1.19, "y": 16, "m": "CNC_02"}, {"x": 1.13, "y": 1, "m": "CNC_02"}, {"x": 1.11, "y": 11, "m": "CNC_03"}, {"x": 1.38, "y": 18, "m": "CNC_02"}, {"x": 1.28, "y": 15, "m": "CNC_01"}, {"x": 1.24, "y": 10, "m": "CNC_03"}, {"x": 0.97, "y": 12, "m": "CNC_05"}, {"x": 1.23, "y": 18, "m": "CNC_03"}, {"x": 1.18, "y": 15, "m": "CNC_04"}, {"x": 1.12, "y": 16, "m": "CNC_03"}, {"x": 0.95, "y": 2, "m": "CNC_05"}, {"x": 1.07, "y": 7, "m": "CNC_05"}, {"x": 1.04, "y": 17, "m": "CNC_01"}, {"x": 1.22, "y": 10, "m": "CNC_05"}, {"x": 1.1, "y": 4, "m": "CNC_03"}, {"x": 1.15, "y": 12, "m": "CNC_05"}, {"x": 0.97, "y": 4, "m": "CNC_04"}, {"x": 1.23, "y": 12, "m": "CNC_02"}, {"x": 1.26, "y": 0, "m": "CNC_05"}, {"x": 1.28, "y": 19, "m": "CNC_02"}, {"x": 1.08, "y": 8, "m": "CNC_05"}, {"x": 1.14, "y": 15, "m": "CNC_02"}, {"x": 0.99, "y": 9, "m": "CNC_05"}, {"x": 1.07, "y": 15, "m": "CNC_05"}, {"x": 1.02, "y": 9, "m": "CNC_02"}, {"x": 1.36, "y": 17, "m": "CNC_05"}, {"x": 1.57, "y": 18, "m": "CNC_05"}, {"x": 1.28, "y": 11, "m": "CNC_05"}, {"x": 1.13, "y": 13, "m": "CNC_03"}, {"x": 1.3, "y": 18, "m": "CNC_03"}, {"x": 0.94, "y": 7, "m": "CNC_03"}, {"x": 1.37, "y": 20, "m": "CNC_04"}, {"x": 1.15, "y": 4, "m": "CNC_01"}, {"x": 1.14, "y": 3, "m": "CNC_01"}, {"x": 1.35, "y": 20, "m": "CNC_04"}, {"x": 1.26, "y": 13, "m": "CNC_03"}, {"x": 1.09, "y": 11, "m": "CNC_02"}, {"x": 1.37, "y": 16, "m": "CNC_02"}, {"x": 1.31, "y": 15, "m": "CNC_03"}, {"x": 1.1, "y": 0, "m": "CNC_02"}, {"x": 1.08, "y": 3, "m": "CNC_02"}, {"x": 1.25, "y": 19, "m": "CNC_01"}, {"x": 1.44, "y": 20, "m": "CNC_05"}, {"x": 1.3, "y": 16, "m": "CNC_03"}, {"x": 1.05, "y": 9, "m": "CNC_02"}, {"x": 1.05, "y": 12, "m": "CNC_01"}, {"x": 0.83, "y": 4, "m": "CNC_05"}, {"x": 1.17, "y": 15, "m": "CNC_05"}, {"x": 1.28, "y": 18, "m": "CNC_02"}, {"x": 1.24, "y": 14, "m": "CNC_03"}, {"x": 1.46, "y": 17, "m": "CNC_01"}, {"x": 1.22, "y": 17, "m": "CNC_01"}, {"x": 1.3, "y": 16, "m": "CNC_04"}, {"x": 0.95, "y": 1, "m": "CNC_02"}, {"x": 1.26, "y": 9, "m": "CNC_02"}, {"x": 1.26, "y": 16, "m": "CNC_05"}, {"x": 1.01, "y": 9, "m": "CNC_01"}, {"x": 1.11, "y": 4, "m": "CNC_04"}, {"x": 1.14, "y": 18, "m": "CNC_01"}, {"x": 1.26, "y": 13, "m": "CNC_03"}, {"x": 1.02, "y": 15, "m": "CNC_02"}, {"x": 1.11, "y": 14, "m": "CNC_02"}, {"x": 1.41, "y": 19, "m": "CNC_02"}, {"x": 0.99, "y": 12, "m": "CNC_05"}, {"x": 1.29, "y": 2, "m": "CNC_03"}, {"x": 1.14, "y": 14, "m": "CNC_05"}, {"x": 1.07, "y": 14, "m": "CNC_04"}, {"x": 1.11, "y": 11, "m": "CNC_05"}, {"x": 1.22, "y": 9, "m": "CNC_01"}, {"x": 1.21, "y": 5, "m": "CNC_02"}, {"x": 1.23, "y": 15, "m": "CNC_05"}, {"x": 1.22, "y": 2, "m": "CNC_03"}, {"x": 1.1, "y": 17, "m": "CNC_05"}, {"x": 1.28, "y": 15, "m": "CNC_02"}, {"x": 1.1, "y": 2, "m": "CNC_01"}, {"x": 1.13, "y": 15, "m": "CNC_03"}, {"x": 0.98, "y": 8, "m": "CNC_01"}, {"x": 1.06, "y": 0, "m": "CNC_02"}, {"x": 1.06, "y": 9, "m": "CNC_02"}, {"x": 1.31, "y": 15, "m": "CNC_02"}, {"x": 1.44, "y": 19, "m": "CNC_02"}, {"x": 0.87, "y": 0, "m": "CNC_05"}, {"x": 1.35, "y": 19, "m": "CNC_02"}, {"x": 0.96, "y": 15, "m": "CNC_01"}, {"x": 1.22, "y": 17, "m": "CNC_05"}, {"x": 1.27, "y": 18, "m": "CNC_04"}, {"x": 1.1, "y": 0, "m": "CNC_04"}, {"x": 1.27, "y": 17, "m": "CNC_02"}, {"x": 1.37, "y": 19, "m": "CNC_04"}, {"x": 1.28, "y": 5, "m": "CNC_05"}, {"x": 1.27, "y": 18, "m": "CNC_01"}, {"x": 1.05, "y": 10, "m": "CNC_05"}, {"x": 1.34, "y": 17, "m": "CNC_05"}, {"x": 1.11, "y": 8, "m": "CNC_05"}, {"x": 0.95, "y": 5, "m": "CNC_02"}, {"x": 1.15, "y": 14, "m": "CNC_01"}, {"x": 1.21, "y": 8, "m": "CNC_02"}, {"x": 1.22, "y": 13, "m": "CNC_04"}, {"x": 1.15, "y": 15, "m": "CNC_03"}, {"x": 1.24, "y": 6, "m": "CNC_02"}, {"x": 0.83, "y": 3, "m": "CNC_05"}, {"x": 1.11, "y": 5, "m": "CNC_02"}, {"x": 1.32, "y": 18, "m": "CNC_05"}, {"x": 1.03, "y": 2, "m": "CNC_04"}, {"x": 1.25, "y": 12, "m": "CNC_04"}, {"x": 1.22, "y": 7, "m": "CNC_05"}, {"x": 0.91, "y": 2, "m": "CNC_02"}, {"x": 1.15, "y": 12, "m": "CNC_05"}, {"x": 1.26, "y": 19, "m": "CNC_04"}, {"x": 1.21, "y": 17, "m": "CNC_01"}, {"x": 1.21, "y": 7, "m": "CNC_03"}, {"x": 1.27, "y": 6, "m": "CNC_02"}, {"x": 1.34, "y": 10, "m": "CNC_01"}, {"x": 1.26, "y": 12, "m": "CNC_04"}, {"x": 1.12, "y": 11, "m": "CNC_01"}, {"x": 1.12, "y": 7, "m": "CNC_02"}, {"x": 1.36, "y": 17, "m": "CNC_01"}, {"x": 1.33, "y": 16, "m": "CNC_05"}, {"x": 1.06, "y": 10, "m": "CNC_04"}, {"x": 0.84, "y": 3, "m": "CNC_01"}, {"x": 1.26, "y": 10, "m": "CNC_04"}, {"x": 0.95, "y": 5, "m": "CNC_01"}, {"x": 1.32, "y": 13, "m": "CNC_01"}, {"x": 1.23, "y": 17, "m": "CNC_04"}, {"x": 1.14, "y": 8, "m": "CNC_05"}, {"x": 1.29, "y": 18, "m": "CNC_03"}, {"x": 1.15, "y": 19, "m": "CNC_03"}, {"x": 1.05, "y": 8, "m": "CNC_03"}, {"x": 1.06, "y": 10, "m": "CNC_04"}, {"x": 1.27, "y": 18, "m": "CNC_04"}, {"x": 1.33, "y": 12, "m": "CNC_04"}, {"x": 1.3, "y": 8, "m": "CNC_02"}, {"x": 1.23, "y": 17, "m": "CNC_03"}, {"x": 0.95, "y": 8, "m": "CNC_02"}, {"x": 0.96, "y": 2, "m": "CNC_01"}, {"x": 0.98, "y": 2, "m": "CNC_05"}, {"x": 1.24, "y": 3, "m": "CNC_02"}, {"x": 0.92, "y": 6, "m": "CNC_04"}, {"x": 1.18, "y": 7, "m": "CNC_05"}, {"x": 1.04, "y": 14, "m": "CNC_02"}, {"x": 1.18, "y": 16, "m": "CNC_03"}, {"x": 0.92, "y": 1, "m": "CNC_02"}, {"x": 1.28, "y": 10, "m": "CNC_05"}, {"x": 1.07, "y": 5, "m": "CNC_02"}, {"x": 1.13, "y": 9, "m": "CNC_04"}, {"x": 0.98, "y": 9, "m": "CNC_05"}, {"x": 1.0, "y": 3, "m": "CNC_03"}, {"x": 0.88, "y": 9, "m": "CNC_03"}, {"x": 1.08, "y": 11, "m": "CNC_03"}, {"x": 1.05, "y": 0, "m": "CNC_02"}, {"x": 1.06, "y": 0, "m": "CNC_03"}, {"x": 1.3, "y": 16, "m": "CNC_05"}, {"x": 0.97, "y": 7, "m": "CNC_05"}, {"x": 1.29, "y": 16, "m": "CNC_01"}, {"x": 1.07, "y": 15, "m": "CNC_04"}, {"x": 1.25, "y": 9, "m": "CNC_05"}, {"x": 1.12, "y": 15, "m": "CNC_03"}, {"x": 1.34, "y": 6, "m": "CNC_03"}, {"x": 1.1, "y": 2, "m": "CNC_05"}, {"x": 1.13, "y": 5, "m": "CNC_01"}, {"x": 1.04, "y": 9, "m": "CNC_05"}, {"x": 1.19, "y": 16, "m": "CNC_05"}, {"x": 1.04, "y": 2, "m": "CNC_04"}, {"x": 1.16, "y": 9, "m": "CNC_04"}, {"x": 0.98, "y": 3, "m": "CNC_02"}, {"x": 1.13, "y": 4, "m": "CNC_03"}, {"x": 1.35, "y": 18, "m": "CNC_01"}, {"x": 0.98, "y": 2, "m": "CNC_04"}, {"x": 0.94, "y": 0, "m": "CNC_01"}, {"x": 1.39, "y": 20, "m": "CNC_03"}, {"x": 1.37, "y": 19, "m": "CNC_01"}, {"x": 1.23, "y": 19, "m": "CNC_03"}, {"x": 1.16, "y": 4, "m": "CNC_01"}, {"x": 1.27, "y": 8, "m": "CNC_02"}, {"x": 1.02, "y": 0, "m": "CNC_03"}, {"x": 1.28, "y": 17, "m": "CNC_01"}, {"x": 1.17, "y": 0, "m": "CNC_04"}, {"x": 1.07, "y": 1, "m": "CNC_04"}, {"x": 1.31, "y": 18, "m": "CNC_04"}, {"x": 1.05, "y": 8, "m": "CNC_01"}, {"x": 0.98, "y": 9, "m": "CNC_04"}, {"x": 1.34, "y": 16, "m": "CNC_03"}, {"x": 1.23, "y": 16, "m": "CNC_04"}, {"x": 1.19, "y": 17, "m": "CNC_04"}, {"x": 1.21, "y": 2, "m": "CNC_01"}, {"x": 1.28, "y": 19, "m": "CNC_02"}, {"x": 1.42, "y": 15, "m": "CNC_03"}, {"x": 1.03, "y": 11, "m": "CNC_04"}, {"x": 1.06, "y": 12, "m": "CNC_04"}, {"x": 1.24, "y": 20, "m": "CNC_04"}, {"x": 1.15, "y": 2, "m": "CNC_01"}, {"x": 1.22, "y": 12, "m": "CNC_05"}, {"x": 1.3, "y": 5, "m": "CNC_05"}, {"x": 1.02, "y": 10, "m": "CNC_04"}, {"x": 1.29, "y": 13, "m": "CNC_01"}, {"x": 0.94, "y": 7, "m": "CNC_04"}, {"x": 1.28, "y": 0, "m": "CNC_01"}, {"x": 0.87, "y": 6, "m": "CNC_05"}, {"x": 1.45, "y": 14, "m": "CNC_04"}, {"x": 1.49, "y": 17, "m": "CNC_01"}, {"x": 1.32, "y": 12, "m": "CNC_01"}, {"x": 1.31, "y": 17, "m": "CNC_02"}, {"x": 1.36, "y": 20, "m": "CNC_01"}, {"x": 1.1, "y": 4, "m": "CNC_03"}, {"x": 1.16, "y": 4, "m": "CNC_05"}, {"x": 1.11, "y": 0, "m": "CNC_04"}, {"x": 1.06, "y": 7, "m": "CNC_04"}, {"x": 1.36, "y": 19, "m": "CNC_02"}, {"x": 1.32, "y": 7, "m": "CNC_05"}, {"x": 1.14, "y": 0, "m": "CNC_05"}, {"x": 1.06, "y": 17, "m": "CNC_01"}, {"x": 1.19, "y": 11, "m": "CNC_05"}, {"x": 1.15, "y": 0, "m": "CNC_02"}, {"x": 1.48, "y": 14, "m": "CNC_01"}, {"x": 1.21, "y": 12, "m": "CNC_04"}, {"x": 1.4, "y": 19, "m": "CNC_03"}, {"x": 1.21, "y": 18, "m": "CNC_04"}, {"x": 0.96, "y": 2, "m": "CNC_01"}, {"x": 1.29, "y": 16, "m": "CNC_03"}, {"x": 1.21, "y": 17, "m": "CNC_05"}, {"x": 1.05, "y": 0, "m": "CNC_01"}, {"x": 1.34, "y": 19, "m": "CNC_01"}, {"x": 0.89, "y": 2, "m": "CNC_01"}, {"x": 1.36, "y": 8, "m": "CNC_05"}, {"x": 1.29, "y": 17, "m": "CNC_04"}, {"x": 1.09, "y": 11, "m": "CNC_03"}, {"x": 1.15, "y": 20, "m": "CNC_03"}, {"x": 1.4, "y": 17, "m": "CNC_03"}, {"x": 1.03, "y": 14, "m": "CNC_03"}, {"x": 1.43, "y": 18, "m": "CNC_02"}, {"x": 1.08, "y": 7, "m": "CNC_02"}, {"x": 1.24, "y": 16, "m": "CNC_02"}, {"x": 1.52, "y": 18, "m": "CNC_03"}, {"x": 1.35, "y": 12, "m": "CNC_05"}, {"x": 0.73, "y": 0, "m": "CNC_04"}, {"x": 1.3, "y": 13, "m": "CNC_03"}, {"x": 1.28, "y": 16, "m": "CNC_02"}, {"x": 1.15, "y": 14, "m": "CNC_05"}, {"x": 0.92, "y": 5, "m": "CNC_04"}, {"x": 1.14, "y": 14, "m": "CNC_04"}, {"x": 0.81, "y": 2, "m": "CNC_05"}, {"x": 0.78, "y": 1, "m": "CNC_04"}, {"x": 1.26, "y": 12, "m": "CNC_01"}, {"x": 1.0, "y": 7, "m": "CNC_05"}, {"x": 1.22, "y": 10, "m": "CNC_05"}, {"x": 1.41, "y": 19, "m": "CNC_05"}, {"x": 1.05, "y": 6, "m": "CNC_01"}, {"x": 0.88, "y": 4, "m": "CNC_03"}, {"x": 1.18, "y": 10, "m": "CNC_01"}, {"x": 0.99, "y": 8, "m": "CNC_04"}, {"x": 1.27, "y": 20, "m": "CNC_03"}, {"x": 1.36, "y": 14, "m": "CNC_05"}, {"x": 1.2, "y": 16, "m": "CNC_03"}, {"x": 0.77, "y": 2, "m": "CNC_03"}, {"x": 1.13, "y": 16, "m": "CNC_02"}, {"x": 1.42, "y": 18, "m": "CNC_01"}, {"x": 1.2, "y": 8, "m": "CNC_05"}, {"x": 1.22, "y": 20, "m": "CNC_03"}, {"x": 1.37, "y": 19, "m": "CNC_05"}, {"x": 1.16, "y": 5, "m": "CNC_05"}, {"x": 1.3, "y": 6, "m": "CNC_04"}, {"x": 1.24, "y": 19, "m": "CNC_01"}, {"x": 1.26, "y": 6, "m": "CNC_01"}, {"x": 1.1, "y": 2, "m": "CNC_04"}, {"x": 1.46, "y": 19, "m": "CNC_04"}, {"x": 1.26, "y": 16, "m": "CNC_05"}, {"x": 1.03, "y": 2, "m": "CNC_05"}, {"x": 1.2, "y": 13, "m": "CNC_05"}, {"x": 1.18, "y": 2, "m": "CNC_02"}, {"x": 1.06, "y": 13, "m": "CNC_01"}, {"x": 0.88, "y": 5, "m": "CNC_05"}, {"x": 1.08, "y": 7, "m": "CNC_04"}, {"x": 1.08, "y": 4, "m": "CNC_04"}, {"x": 1.38, "y": 9, "m": "CNC_01"}, {"x": 1.04, "y": 2, "m": "CNC_01"}, {"x": 1.36, "y": 12, "m": "CNC_05"}, {"x": 0.9, "y": 7, "m": "CNC_03"}, {"x": 1.48, "y": 15, "m": "CNC_03"}, {"x": 1.04, "y": 6, "m": "CNC_02"}, {"x": 0.95, "y": 9, "m": "CNC_02"}, {"x": 1.29, "y": 6, "m": "CNC_01"}, {"x": 1.24, "y": 14, "m": "CNC_01"}, {"x": 1.04, "y": 17, "m": "CNC_05"}, {"x": 1.01, "y": 3, "m": "CNC_05"}, {"x": 1.21, "y": 13, "m": "CNC_05"}, {"x": 1.09, "y": 7, "m": "CNC_04"}, {"x": 1.22, "y": 19, "m": "CNC_03"}, {"x": 1.21, "y": 14, "m": "CNC_02"}, {"x": 1.26, "y": 10, "m": "CNC_01"}, {"x": 1.02, "y": 0, "m": "CNC_01"}, {"x": 1.08, "y": 20, "m": "CNC_01"}, {"x": 1.0, "y": 4, "m": "CNC_05"}, {"x": 1.08, "y": 9, "m": "CNC_02"}, {"x": 1.24, "y": 5, "m": "CNC_01"}, {"x": 1.06, "y": 14, "m": "CNC_04"}, {"x": 1.12, "y": 8, "m": "CNC_05"}, {"x": 1.05, "y": 2, "m": "CNC_02"}, {"x": 1.4, "y": 15, "m": "CNC_03"}, {"x": 1.11, "y": 15, "m": "CNC_02"}, {"x": 1.29, "y": 4, "m": "CNC_03"}, {"x": 1.41, "y": 14, "m": "CNC_05"}, {"x": 1.01, "y": 14, "m": "CNC_04"}, {"x": 1.3, "y": 18, "m": "CNC_05"}, {"x": 1.28, "y": 20, "m": "CNC_03"}, {"x": 1.1, "y": 11, "m": "CNC_02"}, {"x": 0.99, "y": 7, "m": "CNC_02"}, {"x": 1.23, "y": 7, "m": "CNC_02"}, {"x": 1.52, "y": 18, "m": "CNC_03"}, {"x": 1.06, "y": 8, "m": "CNC_01"}, {"x": 1.2, "y": 14, "m": "CNC_05"}, {"x": 1.31, "y": 16, "m": "CNC_03"}, {"x": 1.06, "y": 7, "m": "CNC_01"}, {"x": 1.0, "y": 1, "m": "CNC_04"}, {"x": 0.82, "y": 0, "m": "CNC_05"}, {"x": 1.14, "y": 4, "m": "CNC_03"}, {"x": 1.13, "y": 4, "m": "CNC_05"}, {"x": 1.23, "y": 6, "m": "CNC_01"}, {"x": 1.02, "y": 10, "m": "CNC_02"}, {"x": 1.27, "y": 19, "m": "CNC_04"}, {"x": 1.08, "y": 3, "m": "CNC_03"}, {"x": 0.92, "y": 7, "m": "CNC_03"}, {"x": 1.48, "y": 12, "m": "CNC_02"}, {"x": 1.04, "y": 1, "m": "CNC_01"}, {"x": 1.04, "y": 6, "m": "CNC_03"}, {"x": 0.85, "y": 2, "m": "CNC_03"}, {"x": 1.32, "y": 13, "m": "CNC_01"}, {"x": 1.2, "y": 7, "m": "CNC_04"}, {"x": 1.26, "y": 19, "m": "CNC_04"}, {"x": 1.2, "y": 6, "m": "CNC_03"}, {"x": 1.09, "y": 8, "m": "CNC_04"}, {"x": 1.22, "y": 14, "m": "CNC_05"}, {"x": 1.04, "y": 20, "m": "CNC_05"}, {"x": 1.03, "y": 9, "m": "CNC_03"}, {"x": 1.35, "y": 19, "m": "CNC_01"}, {"x": 1.14, "y": 1, "m": "CNC_01"}, {"x": 1.35, "y": 17, "m": "CNC_05"}, {"x": 1.18, "y": 15, "m": "CNC_05"}, {"x": 1.18, "y": 5, "m": "CNC_03"}, {"x": 1.38, "y": 11, "m": "CNC_05"}, {"x": 1.05, "y": 0, "m": "CNC_04"}, {"x": 1.23, "y": 5, "m": "CNC_02"}, {"x": 1.27, "y": 7, "m": "CNC_04"}, {"x": 1.06, "y": 0, "m": "CNC_02"}, {"x": 1.32, "y": 8, "m": "CNC_05"}, {"x": 1.23, "y": 7, "m": "CNC_04"}, {"x": 1.14, "y": 17, "m": "CNC_03"}, {"x": 1.35, "y": 20, "m": "CNC_04"}, {"x": 1.03, "y": 5, "m": "CNC_05"}, {"x": 1.33, "y": 20, "m": "CNC_02"}, {"x": 1.28, "y": 11, "m": "CNC_02"}, {"x": 1.01, "y": 2, "m": "CNC_05"}, {"x": 1.13, "y": 6, "m": "CNC_03"}, {"x": 1.08, "y": 13, "m": "CNC_01"}, {"x": 1.34, "y": 11, "m": "CNC_04"}, {"x": 1.21, "y": 15, "m": "CNC_02"}, {"x": 1.34, "y": 11, "m": "CNC_02"}, {"x": 1.01, "y": 14, "m": "CNC_01"}, {"x": 1.13, "y": 13, "m": "CNC_04"}, {"x": 1.1, "y": 16, "m": "CNC_01"}, {"x": 1.03, "y": 4, "m": "CNC_04"}, {"x": 1.36, "y": 20, "m": "CNC_04"}, {"x": 1.0, "y": 5, "m": "CNC_04"}, {"x": 1.24, "y": 11, "m": "CNC_05"}, {"x": 1.2, "y": 9, "m": "CNC_05"}], "trend": [{"d": "2025-10-02", "v": 682}, {"d": "2025-10-03", "v": 893}, {"d": "2025-10-04", "v": 1027}, {"d": "2025-10-05", "v": 810}, {"d": "2025-10-06", "v": 887}, {"d": "2025-10-07", "v": 959}, {"d": "2025-10-08", "v": 774}, {"d": "2025-10-09", "v": 870}, {"d": "2025-10-10", "v": 811}, {"d": "2025-10-11", "v": 896}, {"d": "2025-10-12", "v": 1026}, {"d": "2025-10-13", "v": 975}, {"d": "2025-10-14", "v": 835}, {"d": "2025-10-15", "v": 1103}, {"d": "2025-10-16", "v": 759}, {"d": "2025-10-17", "v": 920}, {"d": "2025-10-18", "v": 981}, {"d": "2025-10-19", "v": 925}, {"d": "2025-10-20", "v": 921}, {"d": "2025-10-21", "v": 844}, {"d": "2025-10-22", "v": 673}, {"d": "2025-10-23", "v": 793}, {"d": "2025-10-24", "v": 1119}, {"d": "2025-10-25", "v": 864}, {"d": "2025-10-26", "v": 1008}, {"d": "2025-10-27", "v": 901}, {"d": "2025-10-28", "v": 975}, {"d": "2025-10-29", "v": 747}, {"d": "2025-10-30", "v": 901}, {"d": "2025-10-31", "v": 1015}, {"d": "2025-11-01", "v": 335}], "by_plant": {"Plant 1": {"downtime": 22030, "util": 82.5, "eff": 6.11, "energy": 109325, "oee": 49.4, "units": 650640}, "Plant 2": {"downtime": 5199, "util": 82.4, "eff": 6.11, "energy": 26646, "oee": 49.4, "units": 157984}}, "by_shift": {"A": {"downtime": 11723, "util": 82.3, "eff": 6.12, "energy": 57952, "oee": 49.4, "units": 345351}, "B": {"downtime": 10315, "util": 82.7, "eff": 6.11, "energy": 51812, "oee": 49.5, "units": 308238}, "C": {"downtime": 5191, "util": 82.7, "eff": 6.07, "energy": 26207, "oee": 49.2, "units": 155035}}, "by_line": {"Line_A": {"downtime": 11244, "util": 82.4, "eff": 6.11, "energy": 54874, "oee": 49.4, "units": 326931}, "Line_B": {"downtime": 10786, "util": 82.7, "eff": 6.1, "energy": 54451, "oee": 49.4, "units": 323709}, "Line_C": {"downtime": 5199, "util": 82.4, "eff": 6.11, "energy": 26646, "oee": 49.4, "units": 157984}}, "coverage": [{"thr": 1.1, "coverage": 92.5, "flagged": 66.4}, {"thr": 1.15, "coverage": 85.7, "flagged": 54.9}, {"thr": 1.2, "coverage": 76.2, "flagged": 44.1}, {"thr": 1.25, "coverage": 64.0, "flagged": 32.2}, {"thr": 1.3, "coverage": 48.9, "flagged": 22.6}, {"thr": 1.35, "coverage": 34.5, "flagged": 13.7}, {"thr": 1.4, "coverage": 19.9, "flagged": 7.3}], "live": {"CNC_01": {"type": "CNC Lathe", "temp": 68.4, "vib": 1.4, "power": 25.5, "pf": 0.87, "risk": 0.87, "util": 86.1, "line": "Line_A", "plant": "Plant 1", "mgr": "S. Kumar", "maint": "Up-to-date", "downtime_total": 5682, "avg_risk": 1.17, "anomalies": 14}, "CNC_02": {"type": "CNC Milling", "temp": 62.1, "vib": 3.44, "power": 30.0, "pf": 0.87, "risk": 1.28, "util": 87.1, "line": "Line_A", "plant": "Plant 1", "mgr": "S. Kumar", "maint": "Due Soon", "downtime_total": 5562, "avg_risk": 1.17, "anomalies": 10}, "CNC_03": {"type": "CNC Grinder", "temp": 73.8, "vib": 1.32, "power": 28.0, "pf": 0.95, "risk": 1.07, "util": 88.3, "line": "Line_B", "plant": "Plant 1", "mgr": "M. Patel", "maint": "Up-to-date", "downtime_total": 5738, "avg_risk": 1.17, "anomalies": 9}, "CNC_04": {"type": "CNC Driller", "temp": 87.2, "vib": 2.82, "power": 27.0, "pf": 0.96, "risk": 1.32, "util": 84.4, "line": "Line_B", "plant": "Plant 1", "mgr": "M. Patel", "maint": "Due Soon", "downtime_total": 5048, "avg_risk": 1.16, "anomalies": 12}, "CNC_05": {"type": "CNC Turner", "temp": 77.4, "vib": 2.4, "power": 26.5, "pf": 0.92, "risk": 1.25, "util": 83.3, "line": "Line_C", "plant": "Plant 2", "mgr": "A. Sharma", "maint": "Needs Maintenance", "downtime_total": 5199, "avg_risk": 1.16, "anomalies": 10}}, "deltas": {"downtime": -38.5, "energy": -10.9, "cost": -10.9, "co2": -10.9, "epu": -10.9, "oee_pts": 5.2, "eff": 5.7, "util": 4.5, "anomalies": -74.5, "critical": -87.5, "coverage_chosen": 76.2}};
+const live = DATA.live, MT = DATA.meta.machine_type, MACHINES = DATA.meta.machines;
+const before = DATA.before, meta = DATA.meta;
+const COL={purple:"#45146B",gold:"#C8A028",crit:"#C2384A",warn:"#C8A028",normal:"#3F8F6B"};
+
+// live state per machine (mutable, jittered)
+const state={};
+MACHINES.forEach(m=>{const L=live[m];state[m]={...L,baseTemp:L.temp,baseVib:L.vib,baseRisk:L.risk,basePf:L.pf,baseUtil:L.util};});
+
+function statusOf(s){ // derive from risk + vibration live
+  if(s.risk>=1.30 || s.vib>=3.2) return 'C';
+  if(s.risk>=1.15 || s.vib>=2.7) return 'W';
+  return 'N';
+}
+const SNAME={N:'Normal',W:'Warning',C:'Critical'};
+const ACTIONS={
+  'CNC Turner':['Inspect spindle bearing & re-torque','Spindle vibration analysis','Coolant flow check'],
+  'CNC Milling':['Verify axis alignment','Replace tool & recalibrate','Check way-lube levels'],
+  'CNC Grinder':['Wheel balance & dressing','Inspect coolant nozzles','Bearing temperature check'],
+  'CNC Lathe':['Chuck pressure inspection','Tailstock alignment','Lubrication top-up'],
+  'CNC Driller':['Drill spindle inspection','Feed-axis check','Chip evacuation clean']
+};
+function leadWindow(risk){const h=Math.max(4,Math.round(120*(1.6-risk)));return h<24?h+' h':Math.round(h/24*10)/10+' d';}
+
+function jitter(){
+  MACHINES.forEach(m=>{const s=state[m];
+    s.temp=+(s.baseTemp+(Math.random()-.5)*3.0).toFixed(1);
+    s.vib=Math.max(.2,+(s.baseVib+(Math.random()-.5)*0.5).toFixed(2));
+    s.risk=Math.max(.6,+(s.baseRisk+(Math.random()-.5)*0.10).toFixed(2));
+    s.pf=+(Math.min(.99,s.basePf+(Math.random()-.5)*0.02)).toFixed(2);
+    s.util=+(Math.min(99,s.baseUtil+(Math.random()-.5)*2.0)).toFixed(1);
+    s.st=statusOf(s);});
+}
+
+function gauge(val,max,color){ // val as percent of max for arc
+  const pct=Math.min(1,val/max),R=28,C=2*Math.PI*R,off=C*(1-pct);
+  return `<svg viewBox="0 0 74 74"><circle cx="37" cy="37" r="${R}" fill="none" stroke="#EFEAF6" stroke-width="8"/>
+    <circle cx="37" cy="37" r="${R}" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round"
+    stroke-dasharray="${C}" stroke-dashoffset="${off}" transform="rotate(-90 37 37)"/></svg>`;
+}
+
+function renderScope(){
+  const active=Object.values(state).filter(s=>s.st!=='N').length;
+  const oee=before.oee_overall, rate=(before.total_cost/ (meta?1:1));
+  document.getElementById('scopebar').innerHTML=[
+    ['n','Plant 1 + Plant 2','Scope','',''],
+    ['n',before.oee_overall+'%','Live OEE',''],
+    ['alarm',active,'Assets needing attention',''],
+    ['n','$'+(before.total_cost).toLocaleString(),'Energy cost · pilot',''],
+    ['n',before.anomaly_total,'Anomaly events',''],
+    ['n',meta.records.toLocaleString(),'Readings ingested','']
+  ].map(s=>`<div class="stat ${s[0]==='alarm'?'alarm':''}"><span class="n">${s[1]}</span><span class="t">${s[2]}</span></div>`).join('');
+}
+
+function renderOverview(){
+  const active=Object.values(state).filter(s=>s.st!=='N').length;
+  const crit=Object.values(state).filter(s=>s.st==='C').length;
+  document.getElementById('ovKpis').innerHTML=[
+    ['Assets online',MACHINES.length,'all CNC units streaming'],
+    ['Avg OEE',before.oee_overall+'%','availability × perf × quality'],
+    ['Active alerts',active,crit+' critical · '+(active-crit)+' warning'],
+    ['Units · pilot',(before.total_units).toLocaleString(),'across both plants']
+  ].map(k=>`<div class="kc"><div class="v">${k[1]}</div><div class="l">${k[0]}</div><div class="s">${k[2]}</div></div>`).join('');
+
+  document.getElementById('ovCards').innerHTML=MACHINES.map(m=>{const s=state[m];
+    const gcol=s.st==='C'?COL.crit:s.st==='W'?COL.warn:COL.normal;
+    return `<div class="mcard s-${s.st}"><div class="strip"></div>
+      <div class="mtop"><div><div class="mid">${m}</div><div class="mtype">${MT[m]} · ${s.line} · ${s.plant}</div></div>
+        <span class="sbadge">${SNAME[s.st]}</span></div>
+      <div class="gauge">${gauge(s.risk,1.6,gcol)}
+        <div class="gtxt"><div class="gv">${s.risk.toFixed(2)}</div><div class="gl">Risk score</div></div></div>
+      <div class="telem">
+        <div class="row"><span class="k">Temp</span><span class="v ${s.temp>85?'hot':''}">${s.temp}°C</span></div>
+        <div class="row"><span class="k">Vibration</span><span class="v ${s.vib>3?'hot':''}">${s.vib}</span></div>
+        <div class="row"><span class="k">Utilization</span><span class="v">${s.util}%</span></div>
+        <div class="row"><span class="k">Power factor</span><span class="v">${s.pf}</span></div>
+        <div class="row"><span class="k">Maint.</span><span class="v">${s.maint}</span></div>
+        <div class="row"><span class="k">Lifetime DT</span><span class="v">${(s.downtime_total/60).toFixed(0)}h</span></div>
+      </div></div>`;}).join('');
+}
+
+const acked={};
+function renderMaint(){
+  // summary by maintenance status
+  const cnt={'Up-to-date':0,'Due Soon':0,'Needs Maintenance':0};
+  MACHINES.forEach(m=>cnt[live[m].maint]=(cnt[live[m].maint]||0)+1);
+  document.getElementById('maintSummary').innerHTML=`
+    <div class="ms need"><div class="v">${Object.values(state).filter(s=>s.st==='C').length}</div><div class="l">Critical now</div></div>
+    <div class="ms due"><div class="v">${Object.values(state).filter(s=>s.st==='W').length}</div><div class="l">Warning now</div></div>
+    <div class="ms ok"><div class="v">${Object.values(state).filter(s=>s.st==='N').length}</div><div class="l">Healthy</div></div>
+    <div class="ms"><div class="v">${before.status_counts.Critical}</div><div class="l">Critical readings · pilot</div></div>`;
+
+  const ranked=[...MACHINES].sort((a,b)=>state[b].risk-state[a].risk);
+  document.getElementById('alertQueue').innerHTML=ranked.map((m,i)=>{const s=state[m];
+    const acts=ACTIONS[MT[m]]; const act=acts[Math.min(acts.length-1, s.st==='C'?0:s.st==='W'?1:2)];
+    const isAck=acked[m];
+    return `<div class="alert p-${s.st} ${isAck?'ack':''}" id="al-${m}"><div class="sev"></div>
+      <div class="alert-body">
+        <div class="alert-main">
+          <div class="am-top"><span class="am-id">${m}</span><span class="am-type">${MT[m]} · ${s.line} · ${s.plant}</span></div>
+          <div class="am-action">Recommended: <b>${act}</b></div>
+          <div class="ackmark">✓ Work order dispatched — crew assigned</div>
+        </div>
+        <div class="alert-meta">
+          <div class="am-stat risk"><div class="v">${s.risk.toFixed(2)}</div><div class="l">Risk</div></div>
+          <div class="am-stat"><div class="v">${leadWindow(s.risk)}</div><div class="l">Act within</div></div>
+          <div class="am-stat"><div class="v">${s.vib}</div><div class="l">Vibration</div></div>
+        </div>
+        <div class="am-btns">
+          <button class="btn prim" onclick="ackAlert('${m}')">Acknowledge</button>
+          <button class="btn ghost" onclick="schedule('${m}')">Schedule</button>
+        </div>
+      </div></div>`;}).join('');
+}
+function ackAlert(m){acked[m]=true;document.getElementById('al-'+m).classList.add('ack');toast('Work order created for '+m+' ('+MT[m]+')');}
+function schedule(m){toast('Maintenance window proposed for '+m+' — added to planner');}
+
+function renderEnergy(){
+  document.getElementById('enKpis').innerHTML=[
+    ['Energy · pilot',(before.total_energy).toLocaleString()+' kWh','metered consumption'],
+    ['Energy cost','$'+(before.total_cost).toLocaleString(),'at pilot tariff'],
+    ['CO₂ emissions',(before.total_co2).toLocaleString()+' kg','scope-2 estimate'],
+    ['Anomaly events',before.anomaly_total,'flagged this period']
+  ].map(k=>`<div class="kc"><div class="v">${k[1]}</div><div class="l">${k[0]}</div><div class="s">${k[2]}</div></div>`).join('');
+
+  const en=before.energy, max=Math.max(...MACHINES.map(m=>en[m]));
+  document.getElementById('enBars').innerHTML=MACHINES.map(m=>`
+    <div class="ebar"><span>${m} · ${MT[m].replace('CNC ','')}</span>
+      <div class="track"><div class="fill" style="width:${(en[m]/max*100).toFixed(0)}%"></div></div>
+      <span class="val">${(en[m]/1000).toFixed(1)}k</span></div>`).join('');
+
+  // synth anomaly feed from per-machine anomaly counts
+  const feed=[];
+  MACHINES.forEach(m=>{const n=before.anomalies[m];for(let i=0;i<Math.min(n,3);i++)
+    feed.push({m,t:(2+Math.floor(Math.random()*40))+'m ago'});});
+  feed.sort(()=>Math.random()-.5);
+  document.getElementById('enFeed').innerHTML=feed.slice(0,9).map(f=>`
+    <div class="fitem warn"><div class="ficon">⚡</div>
+      <div class="fmain"><b>${f.m}</b> energy spike — <b>${meta.epu_surplus}%</b> over baseline<br>
+        <span class="ftime">${MT[f.m]} · ${f.t}</span></div></div>`).join('');
+  document.getElementById('surplusBig').textContent='+'+meta.epu_surplus+'%';
+}
+
+// view switching
+document.querySelectorAll('.role').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.role').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.getElementById('v-'+b.dataset.v).classList.add('on');
+  redraw();
+}));
+
+let curView='overview';
+function redraw(){
+  jitter();renderScope();
+  const on=document.querySelector('.view.on').id.replace('v-','');curView=on;
+  if(on==='overview')renderOverview();
+  if(on==='maint')renderMaint();
+  if(on==='energy')renderEnergy();
+}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+function clock(){const d=new Date();document.getElementById('clk').textContent=d.toLocaleTimeString('en-US',{hour12:false});}
+
+jitter();renderScope();renderOverview();renderEnergy();
+clock();setInterval(clock,1000);
+setInterval(()=>{redraw();},2000); // live tick
+</script>
+</body>
+</html>
